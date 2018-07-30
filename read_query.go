@@ -66,7 +66,7 @@ func (mbtiles *Mbtiles) Query(k m.TileID) []byte {
 		data = []byte{}
 	}
 	//mbtiles.Mutex.Unlock()
-	if (data[0] == 0x1f) && (data[1] == 0x8b) {
+	if len(data) > 1 && (data[0] == 0x1f) && (data[1] == 0x8b) {
 		data, err = GUnzipData(data)
 		if err != nil {
 			log.Println(err)
