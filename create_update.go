@@ -247,6 +247,26 @@ func UpdateDB(config Config) Mbtiles {
 	return mb
 }
 
+// read description json string
+func (mbtiles *Mbtiles) Description() (jsonstring string) {
+	// selecting metadata
+	db, err := sql.Open("sqlite3", config.FileName)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	sqlStmt := `
+	select value from metadata where name = "description";
+	`
+
+	var jsonstring string
+	err = db.QueryRow(sqlStmt).Scan(&jsonstring)
+
+	if err != nil {
+		log.Printf("%q: %s\n", err, sqlStmt)
+	}
+}
+
 // adds a single tile to sqlite db
 func (mbtiles *Mbtiles) AddTile(k m.TileID, bytes []byte) {
 	k.Y = (1 << uint64(k.Z)) - 1 - k.Y
