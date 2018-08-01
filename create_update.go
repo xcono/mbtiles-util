@@ -109,7 +109,7 @@ func CreateDB(config Config) Mbtiles {
 
 	// creating tiles table
 	sqlStmt := `
-	CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob);
+	CREATE TABLE tiles (cid integer, zoom_level integer, tile_column integer, tile_row integer, tile_data blob);
 	`
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
