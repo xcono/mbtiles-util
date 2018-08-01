@@ -162,7 +162,7 @@ func CreateDB(config Config) Mbtiles {
 	}
 
 	// creaitng stmt for tiles
-	stmt, err = tx.Prepare("insert into tiles(zoom_level, tile_column,tile_row,tile_data) values(?, ?, ?, ?)")
+	stmt, err = tx.Prepare("insert into tiles(cid, zoom_level, tile_column,tile_row,tile_data) values(?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -228,7 +228,7 @@ func UpdateDB(config Config) Mbtiles {
 	}
 
 	// creaitng stmt for tiles
-	stmt, err = tx.Prepare("insert into tiles(zoom_level, tile_column,tile_row,tile_data) values(?, ?, ?, ?)")
+	stmt, err = tx.Prepare("insert into tiles(cid, zoom_level, tile_column,tile_row,tile_data) values(?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -270,25 +270,25 @@ func (mbtiles *Mbtiles) Description() (jsonstring string) {
 }
 
 // adds a single tile to sqlite db
-func (mbtiles *Mbtiles) AddTile(k m.TileID, bytes []byte) {
+func (mbtiles *Mbtiles) AddTile(cid int, k m.TileID, bytes []byte) {
 	k.Y = (1 << uint64(k.Z)) - 1 - k.Y
 	if mbtiles.NewBool == false {
 		mbtiles.Mutex.Lock()
 		var data []byte
-		query := fmt.Sprintf("select tile_data from tiles where zoom_level = %d and tile_column = %d and tile_row = %d", k.Z, k.X, k.Y)
+		query := fmt.Sprintf("select tile_data from tiles where cid = %d and zoom_level = %d and tile_column = %d and tile_row = %d", cid, k.Z, k.X, k.Y)
 		err := mbtiles.Tx.QueryRow(query).Scan(&data)
 		mbtiles.Mutex.Unlock()
 		if len(data) > 0 {
 			bytes = append(bytes, data...)
 			mbtiles.Mutex.Lock()
-			_, err = mbtiles.Tx.Exec(`update tiles set tile_data = ? where zoom_level = ? and tile_column = ? and tile_row = ?`, bytes, k.Z, k.X, k.Y)
+			_, err = mbtiles.Tx.Exec(`update tiles set tile_data = ? where cid = ? and zoom_level = ? and tile_column = ? and tile_row = ?`, bytes, cid, k.Z, k.X, k.Y)
 			if err != nil {
 				fmt.Print(err, "\n")
 			}
 			mbtiles.Mutex.Unlock()
 		} else {
 			mbtiles.Mutex.Lock()
-			_, err = mbtiles.Stmt.Exec(k.Z, k.X, k.Y, bytes)
+			_, err = mbtiles.Stmt.Exec(cid, k.Z, k.X, k.Y, bytes)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -296,7 +296,7 @@ func (mbtiles *Mbtiles) AddTile(k m.TileID, bytes []byte) {
 		}
 	} else {
 		mbtiles.Mutex.Lock()
-		_, err := mbtiles.Stmt.Exec(k.Z, k.X, k.Y, bytes)
+		_, err := mbtiles.Stmt.Exec(cid, k.Z, k.X, k.Y, bytes)
 		if err != nil {
 			fmt.Println(err)
 		}
